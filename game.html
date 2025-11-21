@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Akashic Reflex</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1034 50%, #2d1b4e 100%);
+            min-height: 100vh;
+            color: #e8e8f0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .title {
+            font-size: 3em;
+            font-weight: bold;
+            background: linear-gradient(135deg, #ffd700, #ff8c00, #8a2be2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            letter-spacing: 4px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #d4af37;
+            font-size: 1.2em;
+            font-style: italic;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .game-container {
+            position: relative;
+            width: 800px;
+            height: 500px;
+            background: linear-gradient(180deg, #1a1a3e 0%, #0f0f28 100%);
+            border: 3px solid rgba(212, 175, 55, 0.5);
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+            cursor: crosshair;
+        }
+
+        .ball {
+            position: absolute;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.1s;
+            box-shadow: 0 0 20px currentColor;
+        }
+
+        .ball:hover {
+            transform: scale(1.1);
+        }
+
+        .ball:active {
+            transform: scale(0.9);
+        }
+
+        .timer {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 3em;
+            color: #ffd700;
+            font-weight: bold;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+        }
+
+        .timer.warning {
+            color: #ff4444;
+            animation: blink 0.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .scoreboard {
+            display: flex;
+            gap: 40px;
+            margin-top: 20px;
+            padding: 20px 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            border: 2px solid rgba(212, 175, 55, 0.3);
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            color: #ffd700;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            color: #b8b8cc;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .controls {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .button {
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            color: #1a1034;
+            border: none;
+            padding: 15px 35px;
+            border-radius: 30px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: 'Georgia', serif;
+            margin: 5px;
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(255, 215, 0, 0.6);
+        }
+
+        .settings {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(138, 43, 226, 0.1);
+            border: 2px solid rgba(138, 43, 226, 0.3);
+            border-radius: 15px;
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .setting {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .setting label {
+            color: #d4af37;
+            font-size: 0.9em;
+        }
+
+        .setting input,
+        .setting select {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 2px solid rgba(212, 175, 55, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+            color: #e8e8f0;
+            font-family: 'Georgia', serif;
+            font-size: 1em;
+            text-align: center;
+        }
+
+        .target-colors {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 215, 0, 0.9);
+            padding: 15px 30px;
+            border-radius: 15px;
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #1a1034;
+            text-align: center;
+            display: none;
+        }
+
+        .target-colors.show {
+            display: block;
+        }
+
+        .color-sample {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin: 0 5px;
+            vertical-align: middle;
+            border: 2px solid #1a1034;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        }
+
+        .wrong-color {
+            animation: shake 0.3s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(10, 14, 39, 0.98);
+            border: 3px solid #ffd700;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            display: none;
+        }
+
+        .game-over.show {
+            display: block;
+        }
+
+        .game-over h2 {
+            font-size: 2.5em;
+            color: #ffd700;
+            margin-bottom: 20px;
+        }
+
+        .game-over p {
+            font-size: 1.2em;
+            color: #c4c4d8;
+            margin: 10px 0;
+        }
+
+        @media (max-width: 850px) {
+            .game-container {
+                width: 95vw;
+                height: 60vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="title">⚡ Akashic Reflex</div>
+    <div class="subtitle">Click the balls before time runs out!</div>
+    <div style="text-align: center; margin-bottom: 15px;">
+        <span style="color: #d4af37; font-size: 0.95em;">Player: <strong style="color: #ffd700;" id="currentUsername">Guest</strong></span>
+        <button onclick="logout()" style="background: linear-gradient(135deg, #8a2be2, #4b0082); color: #fff; border: none; padding: 6px 18px; border-radius: 20px; font-size: 0.85em; margin-left: 15px; cursor: pointer; font-family: 'Georgia', serif;">Logout</button>
+    </div>
+
+    <div class="game-container" id="gameArea">
+        <div class="timer" id="timer">30</div>
+        <div class="target-colors" id="targetColors">Click only: <span id="colorDisplay"></span></div>
+        <div class="game-over" id="gameOver">
+            <h2 id="gameOverTitle">Game Over!</h2>
+            <p id="finalScore"></p>
+            <p id="finalAccuracy"></p>
+            <p id="finalWrong"></p>
+            <button class="button" onclick="startGame()">Play Again</button>
+        </div>
+    </div>
+
+    <div class="scoreboard">
+        <div class="stat">
+            <div class="stat-value" id="score">0</div>
+            <div class="stat-label">Score</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="correct">0</div>
+            <div class="stat-label">Correct</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="wrong">0</div>
+            <div class="stat-label">Wrong</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="target">0/25</div>
+            <div class="stat-label">Progress</div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="button" onclick="startGame()">Start Game</button>
+    </div>
+
+    <div class="settings">
+        <div class="setting">
+            <label>Recognition Mode</label>
+            <select id="recognitionMode">
+                <option value="starter">Starter (Any Color)</option>
+                <option value="medium">Medium (2 Colors)</option>
+                <option value="advanced">Advanced (1 Color Only)</option>
+            </select>
+        </div>
+        <div class="setting">
+            <label>Time (seconds)</label>
+            <input type="number" id="timeLimit" value="30" min="10" max="120">
+        </div>
+        <div class="setting">
+            <label>Target Clicks</label>
+            <input type="number" id="targetClicks" value="25" min="5" max="100">
+        </div>
+        <div class="setting">
+            <label>Ball Size</label>
+            <select id="ballSize">
+                <option value="80">Large</option>
+                <option value="60" selected>Medium</option>
+                <option value="40">Small</option>
+            </select>
+        </div>
+    </div>
+
+    <script>
+        // Session Management
+        function getCurrentUser() {
+            const user = localStorage.getItem('akashic_current_user');
+            return user ? JSON.parse(user) : null;
+        }
+
+        function updateUserStats(gameStats) {
+            const currentUser = getCurrentUser();
+            if (!currentUser) return;
+
+            // Get all users
+            const users = JSON.parse(localStorage.getItem('akashic_users') || '[]');
+            const userIndex = users.findIndex(u => u.username === currentUser.username);
+            
+            if (userIndex !== -1) {
+                // Update stats
+                users[userIndex].stats.gamesPlayed++;
+                users[userIndex].stats.totalClicks += gameStats.correctClicks;
+                
+                if (gameStats.score > users[userIndex].stats.highScore) {
+                    users[userIndex].stats.highScore = gameStats.score;
+                }
+                
+                const accuracy = Math.round((gameStats.correctClicks / (gameStats.correctClicks + gameStats.wrongClicks)) * 100) || 0;
+                if (accuracy > users[userIndex].stats.bestAccuracy) {
+                    users[userIndex].stats.bestAccuracy = accuracy;
+                }
+
+                // Save updated users
+                localStorage.setItem('akashic_users', JSON.stringify(users));
+                
+                // Update current user session
+                const updatedUser = { ...users[userIndex] };
+                delete updatedUser.password;
+                localStorage.setItem('akashic_current_user', JSON.stringify(updatedUser));
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('akashic_current_user');
+            window.location.href = 'login.html';
+        }
+
+        function checkAuth() {
+            const currentUser = getCurrentUser();
+            if (!currentUser) {
+                window.location.href = 'login.html';
+                return false;
+            }
+            document.getElementById('currentUsername').textContent = currentUser.username;
+            return true;
+        }
+
+        // Check authentication on page load
+        if (!checkAuth()) {
+            // Will redirect to login
+        }
+
+        // Original game code
+        let gameActive = false;
+        let score = 0;
+        let correctClicks = 0;
+        let wrongClicks = 0;
+        let timeLeft = 30;
+        let targetClicks = 25;
+        let ballSize = 60;
+        let recognitionMode = 'starter';
+        let targetColors = [];
+        let timerInterval = null;
+        let spawnInterval = null;
+
+        const gameArea = document.getElementById('gameArea');
+        const timerDisplay = document.getElementById('timer');
+        const gameOver = document.getElementById('gameOver');
+        const targetColorsDisplay = document.getElementById('targetColors');
+        const colorDisplay = document.getElementById('colorDisplay');
+
+        const allColors = [
+            { name: 'Red', hex: '#ff6b6b' },
+            { name: 'Cyan', hex: '#4ecdc4' },
+            { name: 'Blue', hex: '#45b7d1' },
+            { name: 'Yellow', hex: '#f9ca24' },
+            { name: 'Purple', hex: '#6c5ce7' },
+            { name: 'Pink', hex: '#fd79a8' },
+            { name: 'Orange', hex: '#fdcb6e' },
+            { name: 'Green', hex: '#00b894' }
+        ];
+
+        function updateDisplay() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('correct').textContent = correctClicks;
+            document.getElementById('wrong').textContent = wrongClicks;
+            document.getElementById('target').textContent = correctClicks + '/' + targetClicks;
+            timerDisplay.textContent = timeLeft;
+
+            if (timeLeft <= 10) {
+                timerDisplay.classList.add('warning');
+            } else {
+                timerDisplay.classList.remove('warning');
+            }
+        }
+
+        function selectTargetColors() {
+            targetColors = [];
+            
+            if (recognitionMode === 'starter') {
+                // Starter: All colors are valid
+                targetColors = [...allColors];
+                targetColorsDisplay.classList.remove('show');
+            } else if (recognitionMode === 'medium') {
+                // Medium: Pick 2 random colors
+                const shuffled = [...allColors].sort(() => Math.random() - 0.5);
+                targetColors = shuffled.slice(0, 2);
+                displayTargetColors();
+            } else if (recognitionMode === 'advanced') {
+                // Advanced: Pick 1 random color
+                targetColors = [allColors[Math.floor(Math.random() * allColors.length)]];
+                displayTargetColors();
+            }
+        }
+
+        function displayTargetColors() {
+            colorDisplay.innerHTML = targetColors.map(color => 
+                `<span class="color-sample" style="background: ${color.hex}"></span>`
+            ).join('');
+            targetColorsDisplay.classList.add('show');
+        }
+
+        function isCorrectColor(colorHex) {
+            if (recognitionMode === 'starter') return true;
+            return targetColors.some(c => c.hex === colorHex);
+        }
+
+        function spawnBall() {
+            if (!gameActive) return;
+
+            const ball = document.createElement('div');
+            ball.className = 'ball';
+
+            const colorObj = allColors[Math.floor(Math.random() * allColors.length)];
+            ball.style.background = colorObj.hex;
+            ball.style.width = ballSize + 'px';
+            ball.style.height = ballSize + 'px';
+            ball.style.color = colorObj.hex;
+            ball.dataset.color = colorObj.hex;
+
+            // Random position
+            const maxX = gameArea.clientWidth - ballSize - 20;
+            const maxY = gameArea.clientHeight - ballSize - 100;
+            ball.style.left = (Math.random() * maxX + 10) + 'px';
+            ball.style.top = (Math.random() * maxY + 120) + 'px';
+
+            ball.onclick = function() {
+                if (!gameActive) return;
+                
+                if (isCorrectColor(ball.dataset.color)) {
+                    // Correct color!
+                    correctClicks++;
+                    score += 10;
+                    ball.remove();
+
+                    // Check win condition
+                    if (correctClicks >= targetClicks) {
+                        endGame(true);
+                    }
+                } else {
+                    // Wrong color!
+                    wrongClicks++;
+                    score -= 5; // Penalty
+                    ball.classList.add('wrong-color');
+                    
+                    // Shake and remove
+                    setTimeout(() => {
+                        ball.remove();
+                    }, 300);
+                }
+                
+                updateDisplay();
+            };
+
+            gameArea.appendChild(ball);
+
+            // Remove ball after 1.5 seconds
+            setTimeout(() => {
+                if (ball.parentElement) {
+                    ball.remove();
+                }
+            }, 1500);
+        }
+
+        function startGame() {
+            // Get settings
+            timeLeft = parseInt(document.getElementById('timeLimit').value);
+            targetClicks = parseInt(document.getElementById('targetClicks').value);
+            ballSize = parseInt(document.getElementById('ballSize').value);
+            recognitionMode = document.getElementById('recognitionMode').value;
+
+            // Reset
+            gameActive = true;
+            score = 0;
+            correctClicks = 0;
+            wrongClicks = 0;
+            gameOver.classList.remove('show');
+
+            // Select target colors based on mode
+            selectTargetColors();
+
+            // Clear any existing balls
+            document.querySelectorAll('.ball').forEach(b => b.remove());
+
+            updateDisplay();
+
+            // Start timer
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateDisplay();
+
+                if (timeLeft <= 0) {
+                    endGame(false);
+                }
+            }, 1000);
+
+            // Spawn balls every 500ms
+            spawnInterval = setInterval(spawnBall, 500);
+            spawnBall(); // First ball immediately
+        }
+
+        function endGame(won) {
+            gameActive = false;
+            clearInterval(timerInterval);
+            clearInterval(spawnInterval);
+
+            // Clear all balls
+            document.querySelectorAll('.ball').forEach(b => b.remove());
+            targetColorsDisplay.classList.remove('show');
+
+            // Calculate accuracy
+            const total = correctClicks + wrongClicks;
+            const accuracy = total > 0 ? Math.round((correctClicks / total) * 100) : 0;
+
+            // Update user stats
+            updateUserStats({
+                score: score,
+                correctClicks: correctClicks,
+                wrongClicks: wrongClicks,
+                won: won
+            });
+
+            // Show results
+            if (won) {
+                document.getElementById('gameOverTitle').textContent = '🎉 Victory!';
+                document.getElementById('gameOverTitle').style.color = '#4ecdc4';
+            } else {
+                document.getElementById('gameOverTitle').textContent = '⏱️ Time\'s Up!';
+                document.getElementById('gameOverTitle').style.color = '#ff6b6b';
+            }
+
+            document.getElementById('finalScore').textContent = 'Final Score: ' + score;
+            document.getElementById('finalAccuracy').textContent = 'Accuracy: ' + accuracy + '% (' + correctClicks + ' correct / ' + wrongClicks + ' wrong)';
+            document.getElementById('finalWrong').textContent = 'Mode: ' + recognitionMode.charAt(0).toUpperCase() + recognitionMode.slice(1);
+
+            gameOver.classList.add('show');
+        }
+
+        // Initialize
+        updateDisplay();
+    </script>
+</body>
+</html>
